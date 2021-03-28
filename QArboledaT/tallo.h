@@ -20,7 +20,7 @@ private:
     bool eliminar = false;
     int p[2];
 public:
-    Rama ramas[5];
+    Rama *ramas = new Rama[5];
     Tallo();
     int getPID();
     void setPID(int pid);

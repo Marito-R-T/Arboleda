@@ -90,12 +90,5 @@ void Programa::cambiarTallo(int tallo, int n_ramas) {
     this->cambiarTallo(tallo, n_ramas, 0);
 }
 
-/* Esperar, donde este esta atento a la escritura del proceso principal, con el read
- esto lee si es el 1ero el tallo, el 2do es la rama, el 3ro es la hoja*/
-void Programa::esperar(Ui::MainWindow &w) {
-    sleep(2);
-    w.txtEntrada->setText("hola");
-}
-
 void Programa::proceso() {
 }

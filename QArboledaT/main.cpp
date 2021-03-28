@@ -1,7 +1,5 @@
-#include "mainwindow.h"
+#include <QCoreApplication>
 
-#include <QApplication>
-#include <programa.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <signal.h>
@@ -26,6 +24,12 @@
 #include <stdbool.h>
 #include <fcntl.h>
 #include <QSharedMemory>
+#include <stdlib.h>
+#include <time.h>
+#include <tallo.h>
+#include <rama.h>
+#include <hoja.h>
+#include <programa.h>
 
 using namespace std;
 
@@ -33,7 +37,6 @@ typedef struct
 {
   Programa programa;
   int x;
-  MainWindow w;
   string comando;
   pthread_mutex_t mutex;
 } shared_data;
@@ -50,6 +53,7 @@ void signalCont(int numero);
 void signalContW(int numero);
 int tallo_mostrado = 0;
 int pid_w,  pid_p;
+string comando;
 
 void initialise_shared() {
     // place our shared data in shared memory
@@ -71,10 +75,9 @@ void initialise_shared() {
 
 int main(int argc, char *argv[])
 {
+    QCoreApplication a(argc, argv);
+
     initialise_shared();
-    QApplication a(argc, argv);
-    MainWindow w;
-    data->w = w;
     /*QJsonValue val = QJsonValue("{\"comando\": \"P\",\"tallos\" : []}");
     QJsonObject obj = val.toObject();
     QJsonDocument doc = QJsonDocument(obj);
@@ -88,13 +91,15 @@ int main(int argc, char *argv[])
         pthread_mutex_unlock(&data->mutex);*/
         pid_w = getpid();
         signal(SIGCONT, signalContW);
-        data->w.show();
-        return a.exec();
+        while(true) {
+            string str;
+            cin >> str;
+            comando = str;
+            pause();
+        }
     } else if (pid == 0){
         sleep(2);
         pthread_mutex_lock(&data->mutex);
-        data->w.getUI()->buttonOK->setText(QString("hola que tal"));
-        pid_p = getpid();
         data->programa.setPID(getpid());
         pthread_mutex_unlock(&data->mutex);
         signal(SIGCONT, signalCont);
@@ -102,7 +107,7 @@ int main(int argc, char *argv[])
     } else {
         printf("error");
     }
-    return 1;
+    return a.exec();
 }
 
 void signalCont(int numero) {
@@ -116,9 +121,8 @@ void signalContW(int numero) {
 }
 
 void leerTexto() {
-    QJsonObject obj = ObtenerJson::getObjeto();
-    QString comando = obj["comando"].toString();
-    QStringList arr = comando.split(",");
+    QString str = QString(comando.c_str());
+    QStringList arr = str.split(",");
     string accion;
     int n_tallo = 0, n_ramas = 0, n_hojas = 0;
     for (int i = 0; i < arr.size(); ++i) {
@@ -144,23 +148,37 @@ void leerTexto() {
 void crearProceso(int n_tallo, int n_ramas, int n_hojas) {
     int pid = fork();
     if(pid == 0) {
+        Tallo Qtallo;
+        Rama *ramas = new Rama[5];
         for (int i = 0; i < n_ramas; ++i) {
             int pidr = fork();
             if(pidr == 0) {
+                Rama rama;
+                Hoja *hojas = new Hoja[10];
                 for (int j = 0; j < n_hojas; ++j) {
                     int pidh = fork();
                     if(pidh == 0) {
+                        Hoja hoja;
+                        hojas[j] = hoja;
                         bucleHoja(n_tallo, i, j);
                         break;
                     } else if(pidh < 0){
 
                     }
                 }
+                rama.hojas = hojas;
+                ramas[i] = rama;
+                bucleRama(n_tallo, i);
                 break;
             } else if(pidr < 0){
 
             }
         }
+        Qtallo.ramas = ramas;
+        pthread_mutex_lock(&data->mutex);
+        data->programa.tallos[n_tallo] = Qtallo;
+        pthread_mutex_unlock(&data->mutex);
+        bucleTallo(n_tallo);
     } else if (pid > 0) {
 
     } else if (pid <0) {
@@ -170,19 +188,24 @@ void crearProceso(int n_tallo, int n_ramas, int n_hojas) {
 
 void bucleTallo(int n_tallo) {
     while(true) {
-        Tallo t = Tallo();
-
+        int num = rand() % 2;
+        printf("colorTallo: %d\n", num);
+        sleep(1);
     }
 }
 
 void bucleRama(int n_tallo, int n_rama) {
     while(true) {
-
+        int num = rand() % 2;
+        printf("colorRama: %d\n", num);
+        sleep(1);
     }
 }
 
 void bucleHoja(int n_tallo, int rama, int n_hoja) {
     while(true) {
-
+        int num = rand() % 2;
+        printf("colorHoja: %d\n", num);
+        sleep(1);
     }
 }

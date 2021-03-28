@@ -1,10 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "programa.h"
-#include <unistd.h>
-#include <stdio.h>
-#include <string>
-#include <wait.h>
 
 using namespace std;
 
@@ -34,15 +29,28 @@ void MainWindow::on_buttonOK_clicked()
         ui->txt_prueba->append(list[i]+"\n");
     }
     programa->leerTexto("");*/
-    printf("Se preciono el boton\n");
     //kill(this->programa->getPID(), SIGCONT);
+    printf("Se preciono el boton\n");
     QString str = ui->txtEntrada->text();
     str = str.remove("(");
     str = str.remove(")");
-    write(this->programa->p[1], str.toStdString().c_str(), 10);
+    kill(pid_p, SIGCONT);
+    pause();
 }
 
-void MainWindow::setPrograma(Programa *programa){
+/*void MainWindow::setPrograma(Programa *programa){
     this->programa = programa;
     this->programa->setPID(18);
+}
+*/
+Ui::MainWindow *MainWindow::getUI(){
+    return this->ui;
+}
+
+void MainWindow::setPIDP(int pid_p) {
+    this->pid_p = pid_p;
+}
+
+int MainWindow::getPIDP() {
+    return this->pid_p;
 }

@@ -2,7 +2,6 @@
 #define PROGRAMA_H
 
 #include <tallo.h>
-#include <QApplication>
 #include <QString>
 #include <vector>
 #include <sys/types.h>
@@ -12,10 +11,6 @@
 #include <QStringList>
 #include <obtenerjson.h>
 #include <string>
-#include <mainwindow.h>
-#include "ui_mainwindow.h"
-
-using namespace std;
 
 class Programa
 {
@@ -29,7 +24,7 @@ private:
     bool eliminar = false;
 public:
     Programa();
-    Tallo tallos[10];
+    Tallo *tallos = new Tallo[10];
     int getPID();
     void setPID(int pid);
     int getCTallos();
@@ -47,7 +42,6 @@ public:
     void producirTallos(int n_tallos);
     void producirRamas(int n_tallos, int n_ramas);
     void producirHojas(int n_tallos, int n_ramas, int n_hojas);
-    void esperar(Ui::MainWindow &w);
 };
 
 #endif // PROGRAMA_H

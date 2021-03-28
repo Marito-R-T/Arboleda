@@ -1,7 +1,7 @@
-#ifndef TALLO_H
-#define TALLO_H
+#ifndef RAMA_H
+#define RAMA_H
 
-#include <rama.h>
+#include <hoja.h>
 #include <vector>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -9,40 +9,36 @@
 #include <stdio.h>
 #include <QString>
 
-class Tallo
+class Rama
 {
 private:
-    int pid, id;
+    int pid, ppid, id;
     void proceso();
-    int cantidad_ramas;
     int cantidad_hojas;
     bool seguir = true;
     bool eliminar = false;
     int p[2];
 public:
-    Rama ramas[5];
-    Tallo();
+    Rama();
+    Hoja *hojas = new Hoja[10];
     int getPID();
     void setPID(int pid);
+    int getPPID();
+    void setPPID(int ppid);
     int getID();
     void setID(int id);
-    int getCRamas();
-    void setCRamas(int cantidad_ramas);
-    int getCHojas();
     int getP0();
     int getP1();
     int* getP();
+    int getCHojas();
     void setCHojas(int cantidad_hojas);
     void setSeguir(bool seguir);
     void setEliminar(bool eliminar);
-    void producirRamas(int n_ramas);
-    void producirHojas(int n_ramas, int n_hojas);
-    void generarRamas();
-    void crearRamas(int n_ramas, int n_hojas);
-    void crearRamas(int n_ramas);
-    void eliminarRamas(int n_ramas);
-    void cambiarRamas(int n_hojas);
+    void producirHojas(int n_hojas);
+    void crearHojas(int n_hojas);
+    void eliminarHojas(int n_hojas);
+    void generarHojas();
     void esperar();
 };
 
-#endif // TALLO_H
+#endif // RAMA_H

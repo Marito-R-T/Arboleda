@@ -3,11 +3,15 @@
 
 #include <hoja.h>
 #include <vector>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <QString>
 
 class Rama
 {
 private:
-    std::vector<Hoja> hojas;
     int pid, ppid, id;
     void proceso();
     int cantidad_hojas;
@@ -16,6 +20,7 @@ private:
     int p[2];
 public:
     Rama();
+    Hoja hojas[10];
     int getPID();
     void setPID(int pid);
     int getPPID();

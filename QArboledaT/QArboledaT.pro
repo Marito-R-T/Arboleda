@@ -1,18 +1,23 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2021-03-24T16:57:46
-#
-#-------------------------------------------------
+QT += core
+QT -= gui
 
-QT       += core gui
+CONFIG += c++11
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+TARGET = QArboledaT
+CONFIG += console
+CONFIG -= app_bundle
 
-TARGET = QArboleda
 TEMPLATE = app
 
+SOURCES += main.cpp \
+    programa.cpp \
+    tallo.cpp \
+    rama.cpp \
+    hoja.cpp \
+    obtenerjson.cpp
+
 # The following define makes your compiler emit warnings if you use
-# any feature of Qt which as been marked as deprecated (the exact warnings
+# any feature of Qt which as been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
@@ -22,23 +27,9 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-
-SOURCES += \
-        main.cpp \
-        mainwindow.cpp \
-    hoja.cpp \
-    programa.cpp \
-    rama.cpp \
-    tallo.cpp \
-    obtenerjson.cpp
-
 HEADERS += \
-        mainwindow.h \
-    hoja.h \
     programa.h \
-    rama.h \
     tallo.h \
+    rama.h \
+    hoja.h \
     obtenerjson.h
-
-FORMS += \
-        mainwindow.ui
