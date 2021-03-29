@@ -155,9 +155,12 @@ void crearRamasNuevas(int numero){
         }
     }
     int CRamas = data->programa.tallos[n_tallo].getCRamas();
+    printf("Se crearan %d de ramas, cada una con %d hijos\n", n_ramas - CRamas, data->programa.tallos[n_tallo].getCHojas());
     regresarRamas(n_ramas - CRamas, data->programa.tallos[n_tallo].getCHojas());
-    for (int i = 0; i < n_ramas-CRamas; ++i) {
+    for (int i = 0; i < n_ramas-CRamas; i++) {
+        printf("Se colocará en la posición %d la rama creada\n", CRamas + i);
         data->programa.tallos[n_tallo].ramas[CRamas+i] = data->rmanipulada[i];
+        data->programa.tallos[n_tallo].ramas[CRamas+i].setCHojas(data->programa.tallos[n_tallo].getCHojas());
     }
     kill(data->pid_p, SIGHUP);
 }
@@ -183,12 +186,15 @@ void crearHojasNuevas(int numero) {
     Rama rama;
     rama = data->programa.tallos[n_tallo].ramas[data->rama_cambiar];
     int cHojas = data->programa.tallos[n_tallo].getCHojas();
+    printf("crear la cantidad de %d\n", n_hojas - cHojas);
+    printf("Se crearan %d hijos, para cada rama\n", n_hojas - cHojas);
     regresarHojas(data->rama_cambiar, n_hojas - cHojas);
     for (int j = 0; j < n_hojas - cHojas; ++j) {
         rama.hojas[cHojas+j] = data->hmanipulada[j];
     }
     rama.setCHojas(n_hojas);
     data->programa.tallos[n_tallo].ramas[data->rama_cambiar] = rama;
+    printf("SALIR DE CREAR HOJAS");
     kill(data->pid_p, SIGHUP);
 }
 
@@ -225,17 +231,17 @@ void regresarRamas(int n_ramas, int n_hojas) {
     for (int i = 0; i < n_ramas; i++) {
         int pidr = fork();
         if(pidr == 0) {
+            signal(SIGINT, crearHojasNuevas);
             Rama rama;
             rama.setCHojas(n_hojas);
             rama.setPID(getpid());
             regresarHojas(i, n_hojas);
-            for (int j = 0; j < 10; ++j) {
+            for (int j = 0; j < n_hojas; ++j) {
                 rama.hojas[j] = data->hmanipulada[j];
             }
             //rama.hojas = hojas;
             data->rmanipulada[i] = rama;
             printf("finalizando hojas!! %d\n", rama.getPID());
-            kill(getppid(), SIGHUP);
             bucleRama(data->tallo_mostrado, i);
             break;
         } else if(pidr < 0){
@@ -291,14 +297,13 @@ void crearProceso(int n_tallo, int n_ramas, int n_hojas) {
         Qtallo.setCHojas(n_hojas);
         Qtallo.setCRamas(n_ramas);
         regresarRamas(n_ramas, n_hojas);
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 0; i < n_ramas; ++i) {
             Qtallo.ramas[i] = data->rmanipulada[i];
         }
         data->programa.tallos[n_tallo] = Qtallo;
         printf("finalizando ramas!! %d\n", data->programa.tallos[n_tallo].getPID());
         data->programa.aumentarCTallos();
         printf("finalizado!\n");
-        kill(getppid(), SIGHUP);
         data->tallo_mostrado = n_tallo;
         pintarTallo();
         bucleTallo(n_tallo);
@@ -326,10 +331,10 @@ void modificarAspectos(int n_tallo, int n_ramas, int n_hojas) {
         data->programa.tallos[n_tallo].eliminarHojas(n_hojas);
     } else if (cHojas < n_hojas) {
         for (int i = 0; i < cRamas; i++) {
-            printf("%d)hasta donde llega el cambiar? %d\n", i,data->programa.tallos[n_tallo].ramas[i].getPID());
+            signal(SIGHUP, signalHup);
+            printf("%d) hasta donde llega el cambiar? %d\n", i,data->programa.tallos[n_tallo].ramas[i].getPID());
             data->rama_cambiar = i;
             kill(data->programa.tallos[n_tallo].ramas[i].getPID(), SIGINT);
-            signal(SIGHUP, signalHup);
             pause();
         }
     }
@@ -338,6 +343,7 @@ void modificarAspectos(int n_tallo, int n_ramas, int n_hojas) {
 
 void bucleTallo(int n_tallo) {
     signal(SIGINT, crearRamasNuevas);
+    kill(getppid(), SIGHUP);
     while(true) {
         if(n_tallo == data->tallo_mostrado){
             int num = rand() % 2;
@@ -348,7 +354,7 @@ void bucleTallo(int n_tallo) {
 }
 
 void bucleRama(int n_tallo, int n_rama) {
-    signal(SIGINT, crearHojasNuevas);
+    kill(getppid(), SIGHUP);
     while(true) {
         if(n_tallo == data->tallo_mostrado){
             int num = rand() % 2;
