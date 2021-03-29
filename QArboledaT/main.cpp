@@ -64,6 +64,7 @@ void signalContW(int numero);
 void signalHup(int numero);
 void pintarTallo();
 void lectura();
+void imprimir();
 /*Rama *regresarRamas(int n_ramas, int n_hojas);
 Hoja *regresarHojas(int n_rama, int n_hojas);*/
 void regresarRamas(int n_ramas, int n_hojas);
@@ -245,6 +246,11 @@ void leerTexto() {
         if(n_tallo < data->programa.getCTallos()) {
             data->tallo_pantalla = n_tallo;
         }
+    } else if(accion == "I") {
+        if(n_tallo < data->programa.getCTallos()) {
+            data->tallo_pantalla = n_tallo;
+            imprimir();
+        }
     }
 }
 
@@ -374,6 +380,46 @@ void pintarTallo() {
             }
         }
     }*/
+}
+
+void imprimir() {
+    system("clear");
+    pintarTallo();
+    QJsonObject Jtallo = QJsonObject();
+    if(data->tallo_pantalla != -1) {
+        Tallo tallo = data->programa.tallos[data->tallo_pantalla];
+        int rt = data->programa.tallos[data->tallo_pantalla].getR();
+        //printf("*%d)RAMA -> color: %d,%d,%d\n", tallo.getPID(), rt, tallo.getG(), tallo.getB());
+        QJsonArray ramas;
+        for (int i = 0; i < tallo.getCRamas(); ++i) {
+            QJsonObject Jrama;
+            int r = data->programa.tallos[data->tallo_pantalla].ramas[i].getR();
+            Rama rama = tallo.ramas[i];
+            //printf("*****%d)Tallo -> color: %d,%d,%d\n", rama.getPID(), r, rama.getG(),  rama.getB());
+            QJsonArray hojas;
+            for (int j = 0; j < tallo.getCHojas(); ++j) {
+                QJsonObject hoja;
+                string rgb = to_string(rama.hojas[j].getR()) + "," +to_string(rama.hojas[j].getG()) + "," + to_string(rama.hojas[j].getB());
+                hoja.insert("pid", QJsonValue(rama.hojas[j].getPID()));
+                hoja.insert("color",QJsonValue(QString(rgb.c_str())));
+                hojas.append(hoja);
+            }
+            string rgb = to_string(rama.getR()) + "," +to_string(rama.getG()) + "," + to_string(rama.getB());
+            Jrama.insert("pid", QJsonValue(rama.getPID()));
+            Jrama.insert("color", QJsonValue(QString(rgb.c_str())));
+            Jrama.insert("hojas", hojas);
+            ramas.append(Jrama);
+        }
+        string rgb = to_string(tallo.getR()) + "," +to_string(tallo.getG()) + "," + to_string(tallo.getB());
+        Jtallo.insert("pid", QJsonValue(tallo.getPID()));
+        Jtallo.insert("color", QJsonValue(QString(rgb.c_str())));
+        Jtallo.insert("ramas", ramas);
+    }
+    QJsonDocument doc = QJsonDocument(Jtallo);
+    printf("%s", doc.toBinaryData().toStdString().c_str());
+    ofstream of("prueba.json");
+    of << doc.toJson().toStdString();
+    of.close();
 }
 
 void crearProceso(int n_tallo, int n_ramas, int n_hojas) {
