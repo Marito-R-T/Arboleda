@@ -20,7 +20,7 @@ private:
     bool eliminar = false;
     int p[2];
 public:
-    Rama *ramas = new Rama[5];
+    Rama ramas[5];
     Tallo();
     int getPID();
     void setPID(int pid);
@@ -41,6 +41,7 @@ public:
     void crearRamas(int n_ramas, int n_hojas);
     void crearRamas(int n_ramas);
     void eliminarRamas(int n_ramas);
+    void eliminarHojas(int n_hojas);
     void cambiarRamas(int n_hojas);
     void esperar();
 };

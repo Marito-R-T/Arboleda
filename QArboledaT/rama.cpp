@@ -64,6 +64,12 @@ void Rama::eliminarHojas(int n_hojas) {
     }*/
 }
 
+void Rama::eliminarTHojas() {
+    for (int i = 0; i < this->cantidad_hojas; ++i) {
+        kill(this->hojas[i].getPID(), SIGKILL);
+    }
+}
+
 void Rama::crearHojas(int n_hojas) {
     /*for (int i=0;i < n_hojas; i++) {
         Hoja hoja = Hoja();

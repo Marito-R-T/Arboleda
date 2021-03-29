@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <QSharedMemory>
 #include <stdlib.h>
+#include<cstring>
 #include <time.h>
 #include <tallo.h>
 #include <rama.h>
@@ -37,7 +38,12 @@ typedef struct
 {
   Programa programa;
   int x;
-  string comando;
+  char comando[9];
+  int tallo_mostrado = 0;
+  Rama rmanipulada[5];
+  Hoja hmanipulada[10];
+  int rama_cambiar = -1;
+  int pid_w,  pid_p;
   pthread_mutex_t mutex;
 } shared_data;
 
@@ -45,15 +51,21 @@ static shared_data* data = NULL;
 
 //void senal(int numero);
 void crearProceso(int n_tallo, int n_ramas, int n_hojas);
+void modificarAspectos(int n_tallo, int n_ramas, int n_hojas);
+void crearRamasNuevas(int numero);
+void crearHojasNuevas(int numero);
 void leerTexto();
 void bucleTallo(int n_tallo);
 void bucleRama(int n_tallo, int n_rama);
 void bucleHoja(int n_tallo, int n_rama, int n_hoja);
 void signalCont(int numero);
 void signalContW(int numero);
-int tallo_mostrado = 0;
-int pid_w,  pid_p;
-string comando;
+void signalHup(int numero);
+void pintarTallo();
+/*Rama *regresarRamas(int n_ramas, int n_hojas);
+Hoja *regresarHojas(int n_rama, int n_hojas);*/
+void regresarRamas(int n_ramas, int n_hojas);
+void regresarHojas(int n_rama, int n_hojas);
 
 void initialise_shared() {
     // place our shared data in shared memory
@@ -61,11 +73,6 @@ void initialise_shared() {
     int flags = MAP_SHARED | MAP_ANONYMOUS;
     data = (shared_data*)mmap(NULL, sizeof(shared_data), prot, flags, -1, 0);
     assert(data);
-    // compartir la ventana
-    /*int prot1 = PROT_READ | PROT_WRITE;
-    int flags1 = MAP_SHARED | MAP_ANONYMOUS;
-    w = (MainWindow*)mmap(NULL, sizeof(MainWindow), prot1, flags1, -1, 0);
-    assert(data);*/
     // initialise mutex so it works properly in shared memory
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
@@ -89,19 +96,25 @@ int main(int argc, char *argv[])
         //w.setPrograma(&programa);
         /*pthread_mutex_lock(&data->mutex);
         pthread_mutex_unlock(&data->mutex);*/
-        pid_w = getpid();
+        data->pid_w = getpid();
         signal(SIGCONT, signalContW);
         while(true) {
-            string str;
-            cin >> str;
-            comando = str;
+            char str[9];
+            printf("Ingrese un comando\n");
+            scanf("%s", &str);
+            for (int i = 0; i < 9; ++i) {
+                data->comando[i] = str[i];
+            }
+            kill(data->pid_p, SIGCONT);
             pause();
         }
     } else if (pid == 0){
-        sleep(2);
-        pthread_mutex_lock(&data->mutex);
+        //pthread_mutex_lock(&data->mutex);
+        sleep(1);
+        printf("hola\n");
+        data->pid_p = getpid();
         data->programa.setPID(getpid());
-        pthread_mutex_unlock(&data->mutex);
+        //pthread_mutex_unlock(&data->mutex);
         signal(SIGCONT, signalCont);
         for (;;);
     } else {
@@ -113,15 +126,20 @@ int main(int argc, char *argv[])
 void signalCont(int numero) {
     signal(SIGCONT, signalCont);
     leerTexto();
-    kill(pid_w, SIGCONT);
+    kill(data->pid_w, SIGCONT);
 }
 
 void signalContW(int numero) {
     signal(SIGCONT, signalContW);
 }
 
-void leerTexto() {
-    QString str = QString(comando.c_str());
+void signalHup(int numero) {
+}
+
+void crearRamasNuevas(int numero){
+    signal(SIGINT, crearRamasNuevas);
+    QString str = QString(data->comando);
+    printf("El comando es: %s\n", data->comando);
     QStringList arr = str.split(",");
     string accion;
     int n_tallo = 0, n_ramas = 0, n_hojas = 0;
@@ -129,83 +147,225 @@ void leerTexto() {
         if(i==0) {
             accion = arr.at(i).toStdString();
         } else if(i == 1) {
-            n_tallo = arr.at(i).toInt();
+            n_tallo = arr.at(i).toInt() - 1;
         } else if (i == 2) {
             n_ramas = arr.at(i).toInt();
         } else if (i == 3) {
             n_hojas = arr.at(i).toInt();
         }
     }
+    int CRamas = data->programa.tallos[n_tallo].getCRamas();
+    regresarRamas(n_ramas - CRamas, data->programa.tallos[n_tallo].getCHojas());
+    for (int i = 0; i < n_ramas-CRamas; ++i) {
+        data->programa.tallos[n_tallo].ramas[CRamas+i] = data->rmanipulada[i];
+    }
+    kill(data->pid_p, SIGHUP);
+}
+
+void crearHojasNuevas(int numero) {
+    signal(SIGINT, crearHojasNuevas);
+    QString str = QString(data->comando);
+    printf("El comando es: %s\n", data->comando);
+    QStringList arr = str.split(",");
+    string accion;
+    int n_tallo = 0, n_ramas = 0, n_hojas = 0;
+    for (int i = 0; i < arr.size(); ++i) {
+        if(i==0) {
+            accion = arr.at(i).toStdString();
+        } else if(i == 1) {
+            n_tallo = arr.at(i).toInt() - 1;
+        } else if (i == 2) {
+            n_ramas = arr.at(i).toInt();
+        } else if (i == 3) {
+            n_hojas = arr.at(i).toInt();
+        }
+    }
+    Rama rama;
+    rama = data->programa.tallos[n_tallo].ramas[data->rama_cambiar];
+    int cHojas = data->programa.tallos[n_tallo].getCHojas();
+    regresarHojas(data->rama_cambiar, n_hojas - cHojas);
+    for (int j = 0; j < n_hojas - cHojas; ++j) {
+        rama.hojas[cHojas+j] = data->hmanipulada[j];
+    }
+    rama.setCHojas(n_hojas);
+    data->programa.tallos[n_tallo].ramas[data->rama_cambiar] = rama;
+    kill(data->pid_p, SIGHUP);
+}
+
+void leerTexto() {
+    QString str = QString(data->comando);
+    printf("El comando es: %s\n", data->comando);
+    QStringList arr = str.split(",");
+    string accion;
+    int n_tallo = 0, n_ramas = 0, n_hojas = 0;
+    for (int i = 0; i < arr.size(); ++i) {
+        if(i==0) {
+            accion = arr.at(i).toStdString();
+        } else if(i == 1) {
+            n_tallo = arr.at(i).toInt() - 1;
+        } else if (i == 2) {
+            n_ramas = arr.at(i).toInt();
+        } else if (i == 3) {
+            n_hojas = arr.at(i).toInt();
+        }
+    }
+    data->tallo_mostrado = n_tallo;
     if(accion == "P"){
         if(n_tallo < data->programa.getCTallos()) {
-            tallo_mostrado = n_tallo;
-        } else if(n_tallo == data->programa.getCTallos()+1) {
+            modificarAspectos(n_tallo, n_ramas, n_hojas);
+        } else if(n_tallo == data->programa.getCTallos()) {
+            printf("Tallo: %d, NRamas: %d, NHojas: %d\n", n_tallo, n_ramas, n_hojas);
             crearProceso(n_tallo, n_ramas, n_hojas);
         }
     }
 }
 
+void regresarRamas(int n_ramas, int n_hojas) {
+    printf("incializando ramas!!\n");
+    for (int i = 0; i < n_ramas; i++) {
+        int pidr = fork();
+        if(pidr == 0) {
+            Rama rama;
+            rama.setCHojas(n_hojas);
+            rama.setPID(getpid());
+            regresarHojas(i, n_hojas);
+            for (int j = 0; j < 10; ++j) {
+                rama.hojas[j] = data->hmanipulada[j];
+            }
+            //rama.hojas = hojas;
+            data->rmanipulada[i] = rama;
+            printf("finalizando hojas!! %d\n", rama.getPID());
+            kill(getppid(), SIGHUP);
+            bucleRama(data->tallo_mostrado, i);
+            break;
+        } else if(pidr < 0){
+
+        } else if(pidr > 0) {
+            signal(SIGHUP, signalHup);
+            pause();
+        }
+    }
+}
+
+void regresarHojas(int n_rama, int n_hojas) {
+    printf("incializando hojas!!\n");
+    for (int j = 0; j < n_hojas; j++) {
+        int pidh = fork();
+        if(pidh == 0) {
+            Hoja hoja;
+            hoja.setPID(getpid());
+            data->hmanipulada[j] = hoja;
+            printf("Hoja:  %d\n", data->hmanipulada[j].getPID());
+            kill(getppid(), SIGHUP);
+            bucleHoja(data->tallo_mostrado, n_rama, j);
+            break;
+        } else if(pidh < 0){
+
+        } else if (pidh > 0){
+            signal(SIGHUP, signalHup);
+            //printf("padre y mi pid es: %d\n", getpid());
+            pause();
+            //printf("padre y mi pid es: %d\n", getpid());
+        }
+    }
+}
+
+void pintarTallo() {
+    Tallo tallo = data->programa.tallos[data->tallo_mostrado];
+    printf("*****%d\n", tallo.getPID());
+    for (int i = 0; i < tallo.getCRamas(); ++i) {
+        Rama rama = tallo.ramas[i];
+        printf("********%d\n", rama.getPID());
+        for (int j = 0; j < tallo.getCHojas(); ++j) {
+            printf("***********%d\n", rama.hojas[j]);
+        }
+    }
+}
+
 void crearProceso(int n_tallo, int n_ramas, int n_hojas) {
+    printf("incializado!!\n");
     int pid = fork();
     if(pid == 0) {
         Tallo Qtallo;
-        Rama *ramas = new Rama[5];
-        for (int i = 0; i < n_ramas; ++i) {
-            int pidr = fork();
-            if(pidr == 0) {
-                Rama rama;
-                Hoja *hojas = new Hoja[10];
-                for (int j = 0; j < n_hojas; ++j) {
-                    int pidh = fork();
-                    if(pidh == 0) {
-                        Hoja hoja;
-                        hojas[j] = hoja;
-                        bucleHoja(n_tallo, i, j);
-                        break;
-                    } else if(pidh < 0){
-
-                    }
-                }
-                rama.hojas = hojas;
-                ramas[i] = rama;
-                bucleRama(n_tallo, i);
-                break;
-            } else if(pidr < 0){
-
-            }
+        Qtallo.setPID(getpid());
+        Qtallo.setCHojas(n_hojas);
+        Qtallo.setCRamas(n_ramas);
+        regresarRamas(n_ramas, n_hojas);
+        for (int i = 0; i < 5; ++i) {
+            Qtallo.ramas[i] = data->rmanipulada[i];
         }
-        Qtallo.ramas = ramas;
-        pthread_mutex_lock(&data->mutex);
         data->programa.tallos[n_tallo] = Qtallo;
-        pthread_mutex_unlock(&data->mutex);
+        printf("finalizando ramas!! %d\n", data->programa.tallos[n_tallo].getPID());
+        data->programa.aumentarCTallos();
+        printf("finalizado!\n");
+        kill(getppid(), SIGHUP);
+        data->tallo_mostrado = n_tallo;
+        pintarTallo();
         bucleTallo(n_tallo);
     } else if (pid > 0) {
-
+        signal(SIGHUP, signalHup);
+        pause();
     } else if (pid <0) {
 
     }
 }
 
+void modificarAspectos(int n_tallo, int n_ramas, int n_hojas) {
+    int cRamas = data->programa.tallos[n_tallo].getCRamas();
+    if(cRamas > n_ramas) {
+        data->programa.tallos[n_tallo].eliminarRamas(n_ramas);
+    } else if (cRamas < n_ramas) {
+        kill(data->programa.tallos[n_tallo].getPID(), SIGINT);
+        signal(SIGHUP, signalHup);
+        pause();
+    }
+    data->programa.tallos[n_tallo].setCRamas(n_ramas);
+    int cHojas = data->programa.tallos[n_tallo].getCHojas();
+    cRamas = data->programa.tallos[n_tallo].getCRamas();
+    if(cHojas > n_hojas) {
+        data->programa.tallos[n_tallo].eliminarHojas(n_hojas);
+    } else if (cHojas < n_hojas) {
+        for (int i = 0; i < cRamas; i++) {
+            printf("%d)hasta donde llega el cambiar? %d\n", i,data->programa.tallos[n_tallo].ramas[i].getPID());
+            data->rama_cambiar = i;
+            kill(data->programa.tallos[n_tallo].ramas[i].getPID(), SIGINT);
+            signal(SIGHUP, signalHup);
+            pause();
+        }
+    }
+    data->programa.tallos[n_tallo].setCHojas(n_hojas);
+}
+
 void bucleTallo(int n_tallo) {
+    signal(SIGINT, crearRamasNuevas);
     while(true) {
-        int num = rand() % 2;
-        printf("colorTallo: %d\n", num);
+        if(n_tallo == data->tallo_mostrado){
+            int num = rand() % 2;
+            //printf("colorTallo: %d\n", num);
+        }
         sleep(1);
     }
 }
 
 void bucleRama(int n_tallo, int n_rama) {
+    signal(SIGINT, crearHojasNuevas);
     while(true) {
-        int num = rand() % 2;
-        printf("colorRama: %d\n", num);
+        if(n_tallo == data->tallo_mostrado){
+            int num = rand() % 2;
+            //printf("colorTallo: %d\n", num);
+        }
+        //printf("colorRama: %d\n", num);
         sleep(1);
     }
 }
 
 void bucleHoja(int n_tallo, int rama, int n_hoja) {
     while(true) {
-        int num = rand() % 2;
-        printf("colorHoja: %d\n", num);
+        if(n_tallo == data->tallo_mostrado){
+            int num = rand() % 2;
+            //printf("colorTallo: %d\n", num);
+        }
+        //printf("colorHoja: %d\n", num);
         sleep(1);
     }
 }

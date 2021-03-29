@@ -20,7 +20,7 @@ private:
     int p[2];
 public:
     Rama();
-    Hoja *hojas = new Hoja[10];
+    Hoja hojas[10];
     int getPID();
     void setPID(int pid);
     int getPPID();
@@ -34,6 +34,7 @@ public:
     void setCHojas(int cantidad_hojas);
     void setSeguir(bool seguir);
     void setEliminar(bool eliminar);
+    void eliminarTHojas();
     void producirHojas(int n_hojas);
     void crearHojas(int n_hojas);
     void eliminarHojas(int n_hojas);

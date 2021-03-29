@@ -92,3 +92,7 @@ void Programa::cambiarTallo(int tallo, int n_ramas) {
 
 void Programa::proceso() {
 }
+
+void Programa::aumentarCTallos() {
+    this->cantidad_tallos++;
+}

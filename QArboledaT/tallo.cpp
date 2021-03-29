@@ -96,13 +96,19 @@ void Tallo::producirHojas(int n_ramas, int n_hojas) {
 }
 
 void Tallo::eliminarRamas(int n_ramas) {
-    /*for (int i = ramas.size() - 1; i > ramas.size() - n_ramas - 1; i--) {
-        QString str = QString(-1);
-        write(this->ramas.at(i).getP1(), str.toStdString().c_str(), 4);
-        ramas.pop_back();
-    }*/
+    for (int i = n_ramas; i < this->cantidad_ramas; i++) {
+        this->ramas[i].eliminarTHojas();
+        kill(ramas[i].getPID(), SIGKILL);
+    }
 }
 
+void Tallo::eliminarHojas(int n_hojas) {
+    for (int i = 0; i < this->cantidad_ramas; ++i) {
+        for (int j = n_hojas; j < this->ramas[i].getCHojas(); ++j) {
+            kill(ramas[i].hojas[j].getPID(), SIGKILL);
+        }
+    }
+}
 void Tallo::cambiarRamas(int n_hojas) {
     /*for (int i = 0; i < this->ramas.size(); i++) {
         QString ram = QString(n_hojas);

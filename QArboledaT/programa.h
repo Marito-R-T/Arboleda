@@ -24,11 +24,11 @@ private:
     bool eliminar = false;
 public:
     Programa();
-    Tallo *tallos = new Tallo[10];
+    Tallo tallos[10];
     int getPID();
     void setPID(int pid);
     int getCTallos();
-    void setCTallos(int cantidad_tallos);
+    void aumentarCTallos();
     int p[2];
     void setPosTallo(int pos_tallo);
     void setSeguir(bool seguir);
