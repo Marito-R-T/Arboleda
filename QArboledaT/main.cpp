@@ -217,7 +217,6 @@ void crearHojasNuevas(int numero) {
 }
 
 void leerTexto() {
-    pintarTallo();
     QString str = QString(data->comando);
     //printf("El comando es: %s\n", data->comando);
     QStringList arr = str.split(",");
@@ -251,6 +250,7 @@ void leerTexto() {
             imprimir();
         }
     }
+    pintarTallo();
 }
 
 void regresarRamas(int n_ramas, int n_hojas) {
