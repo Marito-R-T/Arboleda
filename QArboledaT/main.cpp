@@ -241,9 +241,9 @@ void leerTexto() {
             //printf("Tallo: %d, NRamas: %d, NHojas: %d\n", n_tallo, n_ramas, n_hojas);
             crearProceso(n_tallo, n_ramas, n_hojas);
         }
-    } else if(accion =="M") {
+    } else if(accion == "M") {
         if(n_tallo < data->programa.getCTallos()) {
-            data->tallo_pantalla == n_tallo;
+            data->tallo_pantalla = n_tallo;
         }
     }
 }
@@ -297,19 +297,83 @@ void regresarHojas(int n_rama, int n_hojas) {
     }
 }
 
+/*void pintarRamad(Tallo tallo, int i) {
+    int r = data->programa.tallos[data->tallo_pantalla].ramas[i].getR();
+    Rama rama = tallo.ramas[i];
+    //printf("********%d -> color: %d,%d,%d\n", rama.getPID(), r, rama.getG(),  rama.getB());
+    printf("                       |                           \n");
+    printf("                       |");
+    for (int j = 0; j < tallo.getCHojas(); ++j) {
+        int f = j%2;
+        if(f == 0) {
+            printf("__/__");
+        }
+        //printf("***********%d color: %d,%d,%d\n", rama.hojas[j].getPID(), rama.hojas[j].getR(),
+               //rama.hojas[j].getG(),rama.hojas[j].getB());
+    }
+    printf("\n                       |");
+    for (int j = 0; j < tallo.getCHojas(); ++j) {
+        int f = j%2;
+        if(f == 1) {
+            printf("    \\");
+        }
+        //printf("***********%d color: %d,%d,%d\n", rama.hojas[j].getPID(), rama.hojas[j].getR(),
+               //rama.hojas[j].getG(),rama.hojas[j].getB());
+    }
+    printf("\n                       |                        \n");
+}
+
+void pintarRamai(Tallo tallo, int i) {
+    int r = data->programa.tallos[data->tallo_pantalla].ramas[i].getR();
+    Rama rama = tallo.ramas[i];
+    //printf("********%d -> color: %d,%d,%d\n", rama.getPID(), r, rama.getG(),  rama.getB());
+    printf("                        |                        \n");
+    for (int j = 0; j < tallo.getCHojas(); ++j) {
+        int f = j%2;
+        if(f == 0) {
+            printf("__/__");
+        }
+    }
+    printf("|\n");
+    for (int j = 0; j < tallo.getCHojas(); ++j) {
+        int f = j%2;
+        if(f == 1) {
+            printf("    \\");
+        }
+    }
+    printf(" |                        \n");
+    printf("                         |                        \n");
+}*/
+
 void pintarTallo() {
+    system("clear");
     if(data->tallo_pantalla != -1) {
         Tallo tallo = data->programa.tallos[data->tallo_pantalla];
-        printf("*****%d color: %d,%d,%d\n", tallo.getPID(), tallo.getR(), tallo.getG(), tallo.getB());
+        int rt = data->programa.tallos[data->tallo_pantalla].getR();
+        printf("*%d)RAMA -> color: %d,%d,%d\n", tallo.getPID(), rt, tallo.getG(), tallo.getB());
         for (int i = 0; i < tallo.getCRamas(); ++i) {
+            int r = data->programa.tallos[data->tallo_pantalla].ramas[i].getR();
             Rama rama = tallo.ramas[i];
-            printf("********%d -> color: %d,%d,%d\n", rama.getPID(), rama.getR(), rama.getG(),  rama.getB());
+            printf("*****%d)Tallo -> color: %d,%d,%d\n", rama.getPID(), r, rama.getG(),  rama.getB());
             for (int j = 0; j < tallo.getCHojas(); ++j) {
-                printf("***********%d color: %d,%d,%d\n", rama.hojas[j].getPID(), rama.hojas[j].getR(),
+                printf("**********%d)hoja -> color: %d,%d,%d\n", rama.hojas[j].getPID(), rama.hojas[j].getR(),
                        rama.hojas[j].getG(),rama.hojas[j].getB());
             }
         }
     }
+    /*if(data->tallo_pantalla != -1) {
+        Tallo tallo = data->programa.tallos[data->tallo_pantalla];
+        int rt = data->programa.tallos[data->tallo_pantalla].getR();
+        //printf("*%d: color: %d,%d,%d\n", tallo.getPID(), rt, tallo.getG(), tallo.getB());
+        for (int i = 0; i < tallo.getCRamas(); ++i) {
+            int f = i%2;
+            if(f = 0){
+                pintarRamad(tallo, i);
+            } else {
+                pintarRamai(tallo,i);
+            }
+        }
+    }*/
 }
 
 void crearProceso(int n_tallo, int n_ramas, int n_hojas) {
@@ -373,6 +437,12 @@ void bucleTallo(int n_tallo) {
     kill(getppid(), SIGHUP);
     while(true) {
         if(n_tallo == data->tallo_pantalla){
+            int n = rand() % 2;
+            if(n == 0){
+                data->programa.tallos[n_tallo].setRGB(255,255,255);
+            } else {
+                data->programa.tallos[n_tallo].setRGB(0,0,0);
+            }
             data->programa.cambiarCTallo(n_tallo);
         }
         sleep(1);
@@ -384,6 +454,7 @@ void bucleRama(int n_tallo, int n_rama) {
     kill(getppid(), SIGHUP);
     //printf("entrando a la rama: %d\n", getpid());
     while(true) {
+        //printf("%d %d\n", n_tallo, data->tallo_pantalla);
         if(n_tallo == data->tallo_pantalla){
             data->programa.cambiarCRama(n_tallo, n_rama);
         }
