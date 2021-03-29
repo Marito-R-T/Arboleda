@@ -43,7 +43,8 @@ typedef struct
   Rama rmanipulada[5];
   Hoja hmanipulada[10];
   int rama_cambiar = -1;
-  int pid_w,  pid_p;
+  int tallo_pantalla = -1;
+  int pid_w,  pid_p, pid_l;
   pthread_mutex_t mutex;
 } shared_data;
 
@@ -62,6 +63,7 @@ void signalCont(int numero);
 void signalContW(int numero);
 void signalHup(int numero);
 void pintarTallo();
+void lectura();
 /*Rama *regresarRamas(int n_ramas, int n_hojas);
 Hoja *regresarHojas(int n_rama, int n_hojas);*/
 void regresarRamas(int n_ramas, int n_hojas);
@@ -85,28 +87,24 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
 
     initialise_shared();
-    /*QJsonValue val = QJsonValue("{\"comando\": \"P\",\"tallos\" : []}");
-    QJsonObject obj = val.toObject();
-    QJsonDocument doc = QJsonDocument(obj);
-    ofstream of("programa.json");
-    of<<doc.toJson().toStdString();
-    of.close();*/
     int pid;
     if((pid = fork()) > 0) {
-        //w.setPrograma(&programa);
-        /*pthread_mutex_lock(&data->mutex);
-        pthread_mutex_unlock(&data->mutex);*/
-        data->pid_w = getpid();
-        signal(SIGCONT, signalContW);
-        while(true) {
-            char str[9];
-            printf("Ingrese un comando\n");
-            scanf("%s", &str);
-            for (int i = 0; i < 9; ++i) {
-                data->comando[i] = str[i];
+        int pid_l;
+        if((pid_l = fork()) > 0) {
+            data->pid_w = getpid();
+            signal(SIGCONT, signalContW);
+            while(true) {
+                char str[9];
+                printf("Ingrese un comando\n");
+                scanf("%s", &str);
+                for (int i = 0; i < 9; ++i) {
+                    data->comando[i] = str[i];
+                }
+                kill(data->pid_p, SIGCONT);
+                pause();
             }
-            kill(data->pid_p, SIGCONT);
-            pause();
+        } else if (pid_l == 0) {
+            lectura();
         }
     } else if (pid == 0){
         //pthread_mutex_lock(&data->mutex);
@@ -121,6 +119,25 @@ int main(int argc, char *argv[])
         printf("error");
     }
     return a.exec();
+}
+
+void lectura() {
+    /*while(true) {
+        if(data->tallo_pantalla != -1) {
+            Tallo tallo = data->programa.tallos[data->tallo_pantalla];
+            printf("*****%d color: %d,%d,%d\n", tallo.getPID(), tallo.getR(), tallo.getG(), tallo.getB());
+            for (int i = 0; i < tallo.getCRamas(); ++i) {
+                Rama rama = tallo.ramas[i];
+                printf("********%d -> color: %d,%d,%d\n", rama.getPID(), rama.getR(), rama.getG(),  rama.getB());
+                for (int j = 0; j < tallo.getCHojas(); ++j) {
+                    printf("***********%d color: %d,%d,%d\n", rama.hojas[j].getPID(), rama.hojas[j].getR(),
+                           rama.hojas[j].getG(),rama.hojas[j].getB());
+                }
+            }
+        }
+        sleep(3);
+        system("clear");
+    }*/
 }
 
 void signalCont(int numero) {
@@ -139,7 +156,7 @@ void signalHup(int numero) {
 void crearRamasNuevas(int numero){
     signal(SIGINT, crearRamasNuevas);
     QString str = QString(data->comando);
-    printf("El comando es: %s\n", data->comando);
+    //printf("El comando es: %s\n", data->comando);
     QStringList arr = str.split(",");
     string accion;
     int n_tallo = 0, n_ramas = 0, n_hojas = 0;
@@ -155,10 +172,10 @@ void crearRamasNuevas(int numero){
         }
     }
     int CRamas = data->programa.tallos[n_tallo].getCRamas();
-    printf("Se crearan %d de ramas, cada una con %d hijos\n", n_ramas - CRamas, data->programa.tallos[n_tallo].getCHojas());
+    //printf("Se crearan %d de ramas, cada una con %d hijos\n", n_ramas - CRamas, data->programa.tallos[n_tallo].getCHojas());
     regresarRamas(n_ramas - CRamas, data->programa.tallos[n_tallo].getCHojas());
     for (int i = 0; i < n_ramas-CRamas; i++) {
-        printf("Se colocará en la posición %d la rama creada\n", CRamas + i);
+        //printf("Se colocará en la posición %d la rama creada\n", CRamas + i);
         data->programa.tallos[n_tallo].ramas[CRamas+i] = data->rmanipulada[i];
         data->programa.tallos[n_tallo].ramas[CRamas+i].setCHojas(data->programa.tallos[n_tallo].getCHojas());
     }
@@ -166,9 +183,9 @@ void crearRamasNuevas(int numero){
 }
 
 void crearHojasNuevas(int numero) {
-    signal(SIGINT, crearHojasNuevas);
+    signal(SIGALRM, crearHojasNuevas);
     QString str = QString(data->comando);
-    printf("El comando es: %s\n", data->comando);
+    //printf("El comando es: %s\n", data->comando);
     QStringList arr = str.split(",");
     string accion;
     int n_tallo = 0, n_ramas = 0, n_hojas = 0;
@@ -186,21 +203,22 @@ void crearHojasNuevas(int numero) {
     Rama rama;
     rama = data->programa.tallos[n_tallo].ramas[data->rama_cambiar];
     int cHojas = data->programa.tallos[n_tallo].getCHojas();
-    printf("crear la cantidad de %d\n", n_hojas - cHojas);
-    printf("Se crearan %d hijos, para cada rama\n", n_hojas - cHojas);
+    //printf("crear la cantidad de %d\n", n_hojas - cHojas);
+    //printf("Se crearan %d hijos, para cada rama\n", n_hojas - cHojas);
     regresarHojas(data->rama_cambiar, n_hojas - cHojas);
     for (int j = 0; j < n_hojas - cHojas; ++j) {
         rama.hojas[cHojas+j] = data->hmanipulada[j];
     }
     rama.setCHojas(n_hojas);
     data->programa.tallos[n_tallo].ramas[data->rama_cambiar] = rama;
-    printf("SALIR DE CREAR HOJAS");
+    //printf("SALIR DE CREAR HOJAS");
     kill(data->pid_p, SIGHUP);
 }
 
 void leerTexto() {
+    pintarTallo();
     QString str = QString(data->comando);
-    printf("El comando es: %s\n", data->comando);
+    //printf("El comando es: %s\n", data->comando);
     QStringList arr = str.split(",");
     string accion;
     int n_tallo = 0, n_ramas = 0, n_hojas = 0;
@@ -220,18 +238,21 @@ void leerTexto() {
         if(n_tallo < data->programa.getCTallos()) {
             modificarAspectos(n_tallo, n_ramas, n_hojas);
         } else if(n_tallo == data->programa.getCTallos()) {
-            printf("Tallo: %d, NRamas: %d, NHojas: %d\n", n_tallo, n_ramas, n_hojas);
+            //printf("Tallo: %d, NRamas: %d, NHojas: %d\n", n_tallo, n_ramas, n_hojas);
             crearProceso(n_tallo, n_ramas, n_hojas);
+        }
+    } else if(accion =="M") {
+        if(n_tallo < data->programa.getCTallos()) {
+            data->tallo_pantalla == n_tallo;
         }
     }
 }
 
 void regresarRamas(int n_ramas, int n_hojas) {
-    printf("incializando ramas!!\n");
+    //printf("incializando ramas!!\n");
     for (int i = 0; i < n_ramas; i++) {
         int pidr = fork();
         if(pidr == 0) {
-            signal(SIGINT, crearHojasNuevas);
             Rama rama;
             rama.setCHojas(n_hojas);
             rama.setPID(getpid());
@@ -241,7 +262,7 @@ void regresarRamas(int n_ramas, int n_hojas) {
             }
             //rama.hojas = hojas;
             data->rmanipulada[i] = rama;
-            printf("finalizando hojas!! %d\n", rama.getPID());
+            //printf("finalizando hojas!! %d\n", rama.getPID());
             bucleRama(data->tallo_mostrado, i);
             break;
         } else if(pidr < 0){
@@ -254,14 +275,14 @@ void regresarRamas(int n_ramas, int n_hojas) {
 }
 
 void regresarHojas(int n_rama, int n_hojas) {
-    printf("incializando hojas!!\n");
+    //printf("incializando hojas!!\n");
     for (int j = 0; j < n_hojas; j++) {
         int pidh = fork();
         if(pidh == 0) {
             Hoja hoja;
             hoja.setPID(getpid());
             data->hmanipulada[j] = hoja;
-            printf("Hoja:  %d\n", data->hmanipulada[j].getPID());
+            //printf("Hoja:  %d\n", data->hmanipulada[j].getPID());
             kill(getppid(), SIGHUP);
             bucleHoja(data->tallo_mostrado, n_rama, j);
             break;
@@ -277,19 +298,22 @@ void regresarHojas(int n_rama, int n_hojas) {
 }
 
 void pintarTallo() {
-    Tallo tallo = data->programa.tallos[data->tallo_mostrado];
-    printf("*****%d\n", tallo.getPID());
-    for (int i = 0; i < tallo.getCRamas(); ++i) {
-        Rama rama = tallo.ramas[i];
-        printf("********%d\n", rama.getPID());
-        for (int j = 0; j < tallo.getCHojas(); ++j) {
-            printf("***********%d\n", rama.hojas[j]);
+    if(data->tallo_pantalla != -1) {
+        Tallo tallo = data->programa.tallos[data->tallo_pantalla];
+        printf("*****%d color: %d,%d,%d\n", tallo.getPID(), tallo.getR(), tallo.getG(), tallo.getB());
+        for (int i = 0; i < tallo.getCRamas(); ++i) {
+            Rama rama = tallo.ramas[i];
+            printf("********%d -> color: %d,%d,%d\n", rama.getPID(), rama.getR(), rama.getG(),  rama.getB());
+            for (int j = 0; j < tallo.getCHojas(); ++j) {
+                printf("***********%d color: %d,%d,%d\n", rama.hojas[j].getPID(), rama.hojas[j].getR(),
+                       rama.hojas[j].getG(),rama.hojas[j].getB());
+            }
         }
     }
 }
 
 void crearProceso(int n_tallo, int n_ramas, int n_hojas) {
-    printf("incializado!!\n");
+    //printf("incializado!!\n");
     int pid = fork();
     if(pid == 0) {
         Tallo Qtallo;
@@ -301,11 +325,14 @@ void crearProceso(int n_tallo, int n_ramas, int n_hojas) {
             Qtallo.ramas[i] = data->rmanipulada[i];
         }
         data->programa.tallos[n_tallo] = Qtallo;
-        printf("finalizando ramas!! %d\n", data->programa.tallos[n_tallo].getPID());
+        //printf("finalizando ramas!! %d\n", data->programa.tallos[n_tallo].getPID());
         data->programa.aumentarCTallos();
-        printf("finalizado!\n");
+        //printf("finalizado!\n");
         data->tallo_mostrado = n_tallo;
-        pintarTallo();
+        //pintarTallo();
+        if(n_tallo == 0) {
+            data->tallo_pantalla = n_tallo;
+        }
         bucleTallo(n_tallo);
     } else if (pid > 0) {
         signal(SIGHUP, signalHup);
@@ -331,10 +358,10 @@ void modificarAspectos(int n_tallo, int n_ramas, int n_hojas) {
         data->programa.tallos[n_tallo].eliminarHojas(n_hojas);
     } else if (cHojas < n_hojas) {
         for (int i = 0; i < cRamas; i++) {
-            signal(SIGHUP, signalHup);
-            printf("%d) hasta donde llega el cambiar? %d\n", i,data->programa.tallos[n_tallo].ramas[i].getPID());
+            //printf("%d) hasta donde llega el cambiar? %d\n", i,data->programa.tallos[n_tallo].ramas[i].getPID());
             data->rama_cambiar = i;
-            kill(data->programa.tallos[n_tallo].ramas[i].getPID(), SIGINT);
+            kill(data->programa.tallos[n_tallo].ramas[i].getPID(), SIGALRM);
+            signal(SIGHUP, signalHup);
             pause();
         }
     }
@@ -345,31 +372,29 @@ void bucleTallo(int n_tallo) {
     signal(SIGINT, crearRamasNuevas);
     kill(getppid(), SIGHUP);
     while(true) {
-        if(n_tallo == data->tallo_mostrado){
-            int num = rand() % 2;
-            //printf("colorTallo: %d\n", num);
+        if(n_tallo == data->tallo_pantalla){
+            data->programa.cambiarCTallo(n_tallo);
         }
         sleep(1);
     }
 }
 
 void bucleRama(int n_tallo, int n_rama) {
+    signal(SIGALRM, crearHojasNuevas);
     kill(getppid(), SIGHUP);
+    //printf("entrando a la rama: %d\n", getpid());
     while(true) {
-        if(n_tallo == data->tallo_mostrado){
-            int num = rand() % 2;
-            //printf("colorTallo: %d\n", num);
+        if(n_tallo == data->tallo_pantalla){
+            data->programa.cambiarCRama(n_tallo, n_rama);
         }
-        //printf("colorRama: %d\n", num);
         sleep(1);
     }
 }
 
-void bucleHoja(int n_tallo, int rama, int n_hoja) {
+void bucleHoja(int n_tallo, int n_rama, int n_hoja) {
     while(true) {
-        if(n_tallo == data->tallo_mostrado){
-            int num = rand() % 2;
-            //printf("colorTallo: %d\n", num);
+        if(n_tallo == data->tallo_pantalla){
+            data->programa.cambiarCHoja(n_tallo, n_rama, n_hoja);
         }
         //printf("colorHoja: %d\n", num);
         sleep(1);

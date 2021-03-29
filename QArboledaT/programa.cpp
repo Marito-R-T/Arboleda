@@ -96,3 +96,40 @@ void Programa::proceso() {
 void Programa::aumentarCTallos() {
     this->cantidad_tallos++;
 }
+
+int Programa::getR() {
+    return rand() % 256;
+}
+
+int Programa::getG() {
+    return rand() % 256;
+}
+
+int Programa::getB() {
+    return rand() % 256;
+}
+
+void Programa::cambiarCTallo(int n_tallo) {
+    int ra = rand() % 2;
+    if(ra == 0) {
+        this->tallos[n_tallo].setRGB(155, 155, 155);
+    } else {
+        this->tallos[n_tallo].setRGB(255, 255, 255);
+    }
+}
+
+void Programa::cambiarCRama(int n_tallo, int n_rama) {
+    int r = this->getR();
+    int g = this->getG();
+    int b = this->getB();
+    this->tallos[n_tallo].ramas[n_rama].setRGB(r,g,b);
+}
+
+void Programa::cambiarCHoja(int n_tallo, int n_rama, int n_hoja) {
+    int ra = rand() % 2;
+    if(ra == 0) {
+        this->tallos[n_tallo].ramas[n_rama].hojas[n_hoja].setRGB(0, 187, 45);
+    } else {
+        this->tallos[n_tallo].ramas[n_rama].hojas[n_hoja].setRGB(128, 64, 0);
+    }
+}

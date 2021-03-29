@@ -81,3 +81,21 @@ void Hoja::esperar() {
         exit(0);
     //}
 }
+
+int Hoja::getR() {
+    this->r;
+}
+
+int Hoja::getG() {
+    this->g;
+}
+
+int Hoja::getB() {
+    this->b;
+}
+
+void Hoja::setRGB(int r, int g, int b) {
+    this->r = r;
+    this->g = g;
+    this->b = b;
+}

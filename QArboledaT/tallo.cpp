@@ -159,3 +159,21 @@ void Tallo::proceso() {
         proceso();
     }
 }
+
+int Tallo::getR() {
+    this->r;
+}
+
+int Tallo::getG() {
+    this->g;
+}
+
+int Tallo::getB() {
+    this->b;
+}
+
+void Tallo::setRGB(int r, int g, int b) {
+    this->r = r;
+    this->g = g;
+    this->b = b;
+}

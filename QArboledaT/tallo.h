@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <QString>
+#include <random>
 
 class Tallo
 {
@@ -18,6 +19,7 @@ private:
     int cantidad_hojas;
     bool seguir = true;
     bool eliminar = false;
+    int r, g, b;
     int p[2];
 public:
     Rama ramas[5];
@@ -44,6 +46,10 @@ public:
     void eliminarHojas(int n_hojas);
     void cambiarRamas(int n_hojas);
     void esperar();
+    int getR();
+    int getG();
+    int getB();
+    void setRGB(int r, int g, int b);
 };
 
 #endif // TALLO_H

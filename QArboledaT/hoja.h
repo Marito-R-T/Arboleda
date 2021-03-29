@@ -13,6 +13,7 @@ private:
     bool seguir = true;
     bool eliminar = false;
     int p[2];
+    int r, g, b;
 public:
     Hoja();
     int getPID();
@@ -28,6 +29,10 @@ public:
     void setEliminar(bool eliminar);
     void proceso();
     void esperar();
+    int getR();
+    int getG();
+    int getB();
+    void setRGB(int r, int g, int b);
 };
 
 #endif // HOJA_H

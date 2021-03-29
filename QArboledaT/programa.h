@@ -11,6 +11,7 @@
 #include <QStringList>
 #include <obtenerjson.h>
 #include <string>
+#include <random>
 
 class Programa
 {
@@ -22,6 +23,9 @@ private:
     void proceso();
     bool seguir = true;
     bool eliminar = false;
+    int getR();
+    int getG();
+    int getB();
 public:
     Programa();
     Tallo tallos[10];
@@ -42,6 +46,9 @@ public:
     void producirTallos(int n_tallos);
     void producirRamas(int n_tallos, int n_ramas);
     void producirHojas(int n_tallos, int n_ramas, int n_hojas);
+    void cambiarCTallo(int n_tallo);
+    void cambiarCRama(int n_tallo, int n_rama);
+    void cambiarCHoja(int n_tallo, int n_rama, int n_hoja);
 };
 
 #endif // PROGRAMA_H

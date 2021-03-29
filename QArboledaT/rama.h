@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <QString>
+#include <random>
 
 class Rama
 {
@@ -17,6 +18,7 @@ private:
     int cantidad_hojas;
     bool seguir = true;
     bool eliminar = false;
+    int r, g, b;
     int p[2];
 public:
     Rama();
@@ -40,6 +42,10 @@ public:
     void eliminarHojas(int n_hojas);
     void generarHojas();
     void esperar();
+    int getR();
+    int getG();
+    int getB();
+    void setRGB(int r, int g, int b);
 };
 
 #endif // RAMA_H

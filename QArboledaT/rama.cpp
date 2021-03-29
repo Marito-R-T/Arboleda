@@ -136,3 +136,21 @@ void Rama::proceso() {
         proceso();
     }
 }
+
+int Rama::getR() {
+    this->r;
+}
+
+int Rama::getG() {
+    this->g;
+}
+
+int Rama::getB() {
+    this->b;
+}
+
+void Rama::setRGB(int r, int g, int b) {
+    this->r = r;
+    this->g = g;
+    this->b = b;
+}
